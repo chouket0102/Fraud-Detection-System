@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# AWS Configuration
+.aws-config/
+.temp/
+task-definition.json
+*.pem
+
+# Environment files
+.env
+.env.local
+.env.production
