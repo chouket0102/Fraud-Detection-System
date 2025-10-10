@@ -170,3 +170,19 @@ cluster-create: check-aws ## Create ECS cluster
 	@echo "✓ ECS cluster ready"
 
 
+build-image-push: build-push
+
+build-image-pull:
+	@echo "Pulling image from ECR..."
+	@docker pull $(ECR_URI):latest
+
+build-image-promote:
+	@echo "Promoting image with tag $(BUILD_TAG)..."
+	@docker tag $(ECR_URI):latest $(ECR_URI):$(BUILD_TAG)
+	@docker push $(ECR_URI):$(BUILD_TAG)
+
+up:
+	@docker compose up -d
+
+down:
+	@docker compose down
