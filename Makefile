@@ -182,7 +182,16 @@ build-image-promote:
 	@docker push $(ECR_URI):$(BUILD_TAG)
 
 up:
-	@docker compose up -d
+	@echo "Starting container..."
+	@docker run -d --name fraud-detection-test \
+		-p 8080:8080 \
+		-e SPRING_PROFILES_ACTIVE=test \
+		-e AWS_REGION=$(AWS_REGION) \
+		$(ECR_URI):latest
+	@echo "✓ Container started"
 
 down:
-	@docker compose down
+	@echo "Stopping container..."
+	@docker stop fraud-detection-test 2>/dev/null || true
+	@docker rm fraud-detection-test 2>/dev/null || true
+	@echo "✓ Container stopped"
