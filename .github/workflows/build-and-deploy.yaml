@@ -39,6 +39,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_DEFAULT_REGION }}
 
+      - name: Login to ECR
+        run: make ecr-login  # ← Fixed indentation here
+
       - name: Pull latest image
         run: make build-image-pull
 
@@ -64,6 +67,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_DEFAULT_REGION }}
+
+      - name: Login to ECR  # ← Add this to deploy job too
+        run: make ecr-login
 
       - name: Pull latest image
         run: make build-image-pull
