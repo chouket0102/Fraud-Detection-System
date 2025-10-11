@@ -170,6 +170,27 @@ cluster-create: check-aws ## Create ECS cluster
 	@echo "✓ ECS cluster ready"
 
 
+.PHONY: task-register
+task-register: check-aws ## Register ECS task definition
+	@echo "Generating task definition..."
+	@./scripts/generate-task-definition.sh > task-definition.json
+	@echo "Registering task definition with ECS..."
+	@aws ecs register-task-definition \
+		--cli-input-json file://task-definition.json \
+		--region $(AWS_REGION)
+	@echo "✓ Task definition registered"
+
+.PHONY: service-create
+service-create: check-aws ## Create ECS service
+	@echo "Creating ECS service..."
+	@bash ./scripts/create-service.sh
+	@echo "✓ ECS service created"
+
+.PHONY: deploy-init
+deploy-init: infra-create iam-create logs-create cluster-create task-register service-create ## Initialize complete deployment infrastructure
+	@echo "✓ All infrastructure initialized and ready for deployment"
+
+
 build-image-push: build-push
 
 build-image-pull:
