@@ -39,20 +39,39 @@ TASK_DEFINITION=$(aws ecs describe-task-definition \
     --region $AWS_REGION \
     --query 'taskDefinition')
 
-# Update image in task definition
+# Create temporary file for the new task definition
+TEMP_TASK_DEF=$(mktemp)
+trap "rm -f $TEMP_TASK_DEF" EXIT
+
+# Update image in task definition and save to temp file
 echo "Creating new task definition..."
-NEW_TASK_DEF=$(echo $TASK_DEFINITION | jq --arg IMAGE "$NEW_IMAGE" '
+echo $TASK_DEFINITION | jq --arg IMAGE "$NEW_IMAGE" '
     .containerDefinitions[0].image = $IMAGE |
     del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)
-')
+' > $TEMP_TASK_DEF
+
+# Validate JSON
+if ! jq empty $TEMP_TASK_DEF 2>/dev/null; then
+    echo "Error: Generated task definition is not valid JSON"
+    cat $TEMP_TASK_DEF
+    exit 1
+fi
+
+echo "Task definition preview:"
+cat $TEMP_TASK_DEF | jq -r '.containerDefinitions[0].image'
 
 # Register new task definition
 echo "Registering new task definition..."
-NEW_TASK_ARN=$(echo $NEW_TASK_DEF | aws ecs register-task-definition \
-    --cli-input-json file:///dev/stdin \
+NEW_TASK_ARN=$(aws ecs register-task-definition \
+    --cli-input-json file://$TEMP_TASK_DEF \
     --region $AWS_REGION \
     --query 'taskDefinition.taskDefinitionArn' \
     --output text)
+
+if [ -z "$NEW_TASK_ARN" ]; then
+    echo "Error: Failed to register task definition"
+    exit 1
+fi
 
 echo "New task definition: $NEW_TASK_ARN"
 
@@ -63,7 +82,11 @@ aws ecs update-service \
     --service "$SERVICE_NAME" \
     --task-definition "$NEW_TASK_ARN" \
     --force-new-deployment \
-    --region "$AWS_REGION"
+    --region "$AWS_REGION" \
+    --output json
 
 echo ""
 echo "✓ Deployment initiated successfully!"
+echo ""
+echo "Monitor deployment with:"
+echo "  aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --region $AWS_REGION"
