@@ -1,3 +1,5 @@
+
+
 # Fraud Detection System
 
 <div align="center">
@@ -109,7 +111,7 @@ src/main/java/com/email/aifrauddetection/
 ├── enums/
 │   ├── Category.java                        # RETAIL, TECH, GROCERY
 │   ├── Currency.java                        # EUR, USD, GBP
-│   └── Merchant.java                        # 15 categorised merchants
+│   └── Merchant.java                        # 14 categorised merchants
 ├── model/
 │   ├── Customer.java                        # Customer spending profile
 │   └── Transaction.java                     # Transaction document with embedding
